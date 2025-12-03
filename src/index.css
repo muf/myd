@@ -1,0 +1,210 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body.dark {
+  background: linear-gradient(135deg, #0f172a 0%, #1a1a2e 50%, #16213e 100%);
+  color: #f8fafc;
+}
+
+body.light {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
+  color: #1f2937;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+body.dark ::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+body.light ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+body.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
+body.light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Ant Design 커스텀 스타일 */
+.ant-layout {
+  background: transparent !important;
+}
+
+.ant-table-wrapper .ant-table {
+  background: transparent;
+}
+
+body.dark .ant-table-wrapper .ant-table-thead > tr > th {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+
+body.light .ant-table-wrapper .ant-table-thead > tr > th {
+  background: #f9fafb !important;
+  color: #1f2937 !important;
+  border-color: #e5e7eb !important;
+}
+
+body.dark .ant-table-wrapper .ant-table-tbody > tr > td {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+body.light .ant-table-wrapper .ant-table-tbody > tr > td {
+  background: #ffffff !important;
+  border-color: #e5e7eb !important;
+}
+
+body.dark .ant-table-wrapper .ant-table-tbody > tr:hover > td {
+  background: #334155 !important;
+}
+
+body.light .ant-table-wrapper .ant-table-tbody > tr:hover > td {
+  background: #f3f4f6 !important;
+}
+
+/* Tabs 스타일 */
+body.dark .ant-tabs-card > .ant-tabs-nav .ant-tabs-tab {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+body.dark .ant-tabs-card > .ant-tabs-nav .ant-tabs-tab-active {
+  background: #334155;
+  border-color: #22c55e;
+}
+
+body.light .ant-tabs-card > .ant-tabs-nav .ant-tabs-tab {
+  background: #ffffff;
+  border-color: #e5e7eb;
+}
+
+body.light .ant-tabs-card > .ant-tabs-nav .ant-tabs-tab-active {
+  background: #f0fdf4;
+  border-color: #22c55e;
+}
+
+/* Card 스타일 */
+body.dark .ant-card {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: #334155;
+}
+
+body.light .ant-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: #e5e7eb;
+}
+
+/* Pagination 스타일 */
+body.dark .ant-pagination .ant-pagination-item {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+body.dark .ant-pagination .ant-pagination-item a {
+  color: #f8fafc;
+}
+
+body.dark .ant-pagination .ant-pagination-item-active {
+  border-color: #22c55e;
+}
+
+/* Dropdown 스타일 */
+body.dark .ant-dropdown-menu {
+  background: #1e293b;
+  border: 1px solid #334155;
+}
+
+body.dark .ant-dropdown-menu-item {
+  color: #f8fafc;
+}
+
+body.dark .ant-dropdown-menu-item:hover {
+  background: #334155;
+}
+
+/* Select, Input 스타일 */
+body.dark .ant-select-selector,
+body.dark .ant-input {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+body.dark .ant-select-dropdown {
+  background: #1e293b;
+  border: 1px solid #334155;
+}
+
+body.dark .ant-select-item {
+  color: #f8fafc;
+}
+
+body.dark .ant-select-item-option-active,
+body.dark .ant-select-item-option-selected {
+  background: #334155;
+}
+
+/* Empty 스타일 */
+body.dark .ant-empty-description {
+  color: #94a3b8;
+}
+
+/* Spin 스타일 */
+body.dark .ant-spin-text {
+  color: #94a3b8;
+}
+
+/* Filter dropdown 스타일 */
+body.dark .ant-table-filter-dropdown {
+  background: #1e293b;
+  border: 1px solid #334155;
+}
+
+body.dark .ant-table-filter-dropdown .ant-input {
+  background: #0f172a !important;
+}
+
+body.dark .ant-checkbox-wrapper {
+  color: #f8fafc;
+}
+
+/* Switch 스타일 */
+.ant-switch-checked {
+  background: #22c55e !important;
+}
