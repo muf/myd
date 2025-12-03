@@ -7,6 +7,7 @@ import { useTheme } from '../contexts/ThemeContext'
 interface DataTableProps {
   data: SheetData | null
   isLoading: boolean
+  hideFilters?: boolean
 }
 
 interface DataRow {
@@ -15,7 +16,7 @@ interface DataRow {
 }
 
 // 컬럼 이름 매핑 (헤더 텍스트 기준)
-type ColumnName = '날짜' | '요소' | '지출분류' | '요약' | '금액'
+type ColumnName = '날짜' | '요소' | '지출분류' | '요약' | '금액' | '메모'
 
 // 컬럼별 기능 정의
 const COLUMN_CONFIG: Record<ColumnName, { sort: boolean; filter: boolean }> = {
@@ -24,6 +25,7 @@ const COLUMN_CONFIG: Record<ColumnName, { sort: boolean; filter: boolean }> = {
   '지출분류': { sort: false, filter: true },
   '요약': { sort: false, filter: false },
   '금액': { sort: true, filter: false },
+  '메모': { sort: false, filter: false },
 }
 
 // 날짜 파싱 함수
@@ -65,7 +67,8 @@ function getColumnName(header: string): ColumnName | null {
   if (lower.includes('날짜') || lower.includes('일자') || lower.includes('date')) return '날짜'
   if (lower.includes('요소')) return '요소'
   if (lower.includes('지출분류') || lower.includes('분류')) return '지출분류'
-  if (lower.includes('요약') || lower.includes('내용') || lower.includes('메모')) return '요약'
+  if (lower.includes('메모')) return '메모'
+  if (lower.includes('요약') || lower.includes('내용')) return '요약'
   // 금액 관련 다양한 패턴 매칭
   if (lower.includes('금액') || lower.includes('가격') || lower === '수입' || lower === '지출' || lower.includes('원') || lower.includes('money') || lower.includes('amount')) return '금액'
   return null
@@ -91,7 +94,7 @@ function getRowColorByCategory(category: string): { text: string; bg: string } |
 
 const ITEMS_PER_PAGE = 20
 
-export function DataTable({ data, isLoading }: DataTableProps) {
+export function DataTable({ data, isLoading, hideFilters = false }: DataTableProps) {
   const { isDark } = useTheme()
   const [searchText, setSearchText] = useState('')
   const [columnFilters, setColumnFilters] = useState<Record<string, string[]>>({})
@@ -388,54 +391,56 @@ export function DataTable({ data, isLoading }: DataTableProps) {
   return (
     <div className="space-y-3 sm:space-y-4">
       {/* 검색 및 필터 영역 */}
-      <div
-        className="p-3 sm:p-4 rounded-lg space-y-3"
-        style={{
-          background: isDark ? 'rgba(30, 41, 59, 0.5)' : 'rgba(249, 250, 251, 0.8)',
-          border: `1px solid ${isDark ? '#334155' : '#e5e7eb'}`,
-        }}
-      >
-        {/* 전체 검색 */}
-        <Input
-          placeholder="전체 검색..."
-          prefix={<SearchOutlined className="text-gray-400" />}
-          value={searchText}
-          onChange={(e) => handleSearchChange(e.target.value)}
-          allowClear
-          size="large"
-          style={{ background: isDark ? '#1e293b' : '#ffffff' }}
-        />
+      {!hideFilters && (
+        <div
+          className="p-3 sm:p-4 rounded-lg space-y-3"
+          style={{
+            background: isDark ? 'rgba(30, 41, 59, 0.5)' : 'rgba(249, 250, 251, 0.8)',
+            border: `1px solid ${isDark ? '#334155' : '#e5e7eb'}`,
+          }}
+        >
+          {/* 전체 검색 */}
+          <Input
+            placeholder="전체 검색..."
+            prefix={<SearchOutlined className="text-gray-400" />}
+            value={searchText}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            allowClear
+            size="large"
+            style={{ background: isDark ? '#1e293b' : '#ffffff' }}
+          />
 
-        {/* 컬럼 필터 - 모바일에서 세로 배치 */}
-        <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3">
-          {filterableColumns.map((col) => (
-            <Select
-              key={col.dataIndex}
-              mode="multiple"
-              placeholder={`${col.header}`}
-              value={columnFilters[col.dataIndex] || []}
-              onChange={(values) => handleFilterChange(col.dataIndex, values)}
-              className="w-full sm:w-auto"
-              style={{ minWidth: 120 }}
-              maxTagCount={1}
-              allowClear
-              options={col.options.map((opt) => ({ label: opt, value: opt }))}
-            />
-          ))}
-          {(searchText || Object.values(columnFilters).some((v) => v?.length > 0)) && (
-            <Button
-              onClick={() => {
-                setSearchText('')
-                setColumnFilters({})
-                setVisibleCount(ITEMS_PER_PAGE)
-              }}
-              className="w-full sm:w-auto"
-            >
-              필터 초기화
-            </Button>
-          )}
+          {/* 컬럼 필터 - 모바일에서 세로 배치 */}
+          <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3">
+            {filterableColumns.map((col) => (
+              <Select
+                key={col.dataIndex}
+                mode="multiple"
+                placeholder={`${col.header}`}
+                value={columnFilters[col.dataIndex] || []}
+                onChange={(values) => handleFilterChange(col.dataIndex, values)}
+                className="w-full sm:w-auto"
+                style={{ minWidth: 120 }}
+                maxTagCount={1}
+                allowClear
+                options={col.options.map((opt) => ({ label: opt, value: opt }))}
+              />
+            ))}
+            {(searchText || Object.values(columnFilters).some((v) => v?.length > 0)) && (
+              <Button
+                onClick={() => {
+                  setSearchText('')
+                  setColumnFilters({})
+                  setVisibleCount(ITEMS_PER_PAGE)
+                }}
+                className="w-full sm:w-auto"
+              >
+                필터 초기화
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 결과 개수 및 금액 합산 */}
       <div
@@ -565,12 +570,15 @@ export function DataTable({ data, isLoading }: DataTableProps) {
           const summaryCol = columnSettings.find((c) => c.columnName === '요약')
           const categoryCol = columnSettings.find((c) => c.columnName === '지출분류')
           const elementCol = columnSettings.find((c) => c.columnName === '요소')
+          const memoCol = columnSettings.find((c) => c.columnName === '메모')
 
           const date = dateCol ? row[dateCol.dataIndex] : ''
           const amount = amountCol ? row[amountCol.dataIndex] : ''
           const summary = summaryCol ? row[summaryCol.dataIndex] : ''
           const category = categoryCol ? row[categoryCol.dataIndex] : ''
           const element = elementCol ? row[elementCol.dataIndex] : ''
+          const memo = memoCol ? row[memoCol.dataIndex] : ''
+          
           
           const num = parseNumber(amount)
           const rowColor = getRowColorByCategory(category)
@@ -603,12 +611,26 @@ export function DataTable({ data, isLoading }: DataTableProps) {
                         {category}
                       </span>
                     )}
+                    {memo && memo.trim() && (
+                      <span
+                        className="text-xs px-1.5 py-0.5 rounded"
+                        style={{
+                          background: rowColor ? 'rgba(255,255,255,0.08)' : (isDark ? '#1e293b' : '#f3f4f6'),
+                          color: rowColor?.text ? `${rowColor.text}cc` : (isDark ? '#94a3b8' : '#6b7280'),
+                          border: `1px solid ${rowColor ? 'rgba(255,255,255,0.15)' : (isDark ? '#334155' : '#e5e7eb')}`,
+                        }}
+                      >
+                        {memo}
+                      </span>
+                    )}
                   </div>
                   <div className="font-medium truncate" style={{ color: rowColor?.text || (isDark ? '#f8fafc' : '#1f2937') }}>
                     {summary || element || '-'}
                   </div>
                   {element && summary && (
-                    <div className="text-xs truncate" style={{ color: rowColor?.text ? `${rowColor.text}99` : '#9ca3af' }}>{element}</div>
+                    <div className="text-xs truncate" style={{ color: rowColor?.text ? `${rowColor.text}99` : '#9ca3af' }}>
+                      {element.trim().startsWith('-') ? element : `- ${element}`}
+                    </div>
                   )}
                 </div>
                 <div
