@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { Layout, Button, Avatar, Dropdown, Spin, Alert, Typography, Switch, Drawer } from 'antd'
 import {
   ReloadOutlined,
@@ -38,22 +38,11 @@ export function MainPage() {
     totalBudget,
     selectedMonth,
     hasAccess,
-    errorType,
     isLoading,
     error,
     selectMonth,
     refresh,
   } = useGoogleSheets()
-
-  // 스코프 에러일 때 자동으로 로그아웃해서 재로그인 유도
-  useEffect(() => {
-    if (errorType === 'scope') {
-      console.log('토큰 스코프 부족 - 재로그인 필요')
-      // localStorage 클리어하고 로그아웃
-      localStorage.clear()
-      logout()
-    }
-  }, [errorType, logout])
 
   // 모든 탭의 카테고리별 합계 계산
   const categoryTotals = useMemo(() => {
