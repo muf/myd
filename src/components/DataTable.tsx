@@ -27,6 +27,7 @@ interface DataTableProps {
 }
 
 const ITEMS_PER_PAGE = 30
+const ENABLE_DELETE = false // 삭제 기능 임시 비활성화
 
 export function DataTable({ data, isLoading, hideFilters = false, sheetId, onDataChange }: DataTableProps) {
   const { isDark } = useTheme()
@@ -739,7 +740,7 @@ export function DataTable({ data, isLoading, hideFilters = false, sheetId, onDat
                 )
               })}
               {/* 작업 컬럼 (삭제 버튼) */}
-              {sheetId && onDataChange && (
+              {ENABLE_DELETE && sheetId && onDataChange && (
                 <th
                   className="px-3 py-3 text-center font-medium whitespace-nowrap"
                   style={{
@@ -808,7 +809,7 @@ export function DataTable({ data, isLoading, hideFilters = false, sheetId, onDat
                     )
                   })}
                   {/* 삭제 버튼 */}
-                  {sheetId && onDataChange && (
+                  {ENABLE_DELETE && sheetId && onDataChange && (
                     <td
                       className="px-3 py-2.5 text-center"
                       style={{
@@ -921,7 +922,7 @@ export function DataTable({ data, isLoading, hideFilters = false, sheetId, onDat
                     ) : amount || '-'}
                   </div>
                 </div>
-                {sheetId && onDataChange && (
+                {ENABLE_DELETE && sheetId && onDataChange && (
                   <div className="flex justify-end">
                     <Button
                       type="text"

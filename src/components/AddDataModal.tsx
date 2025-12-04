@@ -103,7 +103,7 @@ export function AddDataModal({
       ]
 
       // Google Sheets API로 데이터 추가
-      const SPREADSHEET_ID = import.meta.env.VITE_SPREADSHEET_ID
+      const SPREADSHEET_ID = import.meta.env.VITE_SPREADSHEET_ID ?? "10zucaKG4Cu7WT-2Dijpn4S9h-6EODzJMmoI9e75LDio"
       const range = `'${sheet}'!A:G`
       
       const response = await fetch(

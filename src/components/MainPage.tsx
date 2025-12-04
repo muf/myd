@@ -299,7 +299,7 @@ export function MainPage() {
             <Button
               type="text"
               icon={<TableOutlined style={{ color: '#0f9d58', fontSize: 18 }} />}
-              onClick={() => window.open(`https://docs.google.com/spreadsheets/d/${import.meta.env.VITE_SPREADSHEET_ID}/edit`, '_blank')}
+              onClick={() => window.open(`https://docs.google.com/spreadsheets/d/${import.meta.env.VITE_SPREADSHEET_ID ?? "10zucaKG4Cu7WT-2Dijpn4S9h-6EODzJMmoI9e75LDio"}/edit`, '_blank')}
               size="small"
               title="구글 시트 열기"
             />
@@ -365,7 +365,7 @@ export function MainPage() {
             <Button
               type="text"
               icon={<TableOutlined style={{ color: '#0f9d58', fontSize: 22 }} />}
-              onClick={() => window.open(`https://docs.google.com/spreadsheets/d/${import.meta.env.VITE_SPREADSHEET_ID}/edit`, '_blank')}
+              onClick={() => window.open(`https://docs.google.com/spreadsheets/d/${import.meta.env.VITE_SPREADSHEET_ID ?? "10zucaKG4Cu7WT-2Dijpn4S9h-6EODzJMmoI9e75LDio"}/edit`, '_blank')}
               style={{ width: 40, height: 40 }}
               title="구글 시트 열기"
             />
@@ -465,7 +465,7 @@ export function MainPage() {
           <Button
             icon={<TableOutlined style={{ color: '#0f9d58' }} />}
             onClick={() => {
-              window.open(`https://docs.google.com/spreadsheets/d/${import.meta.env.VITE_SPREADSHEET_ID}/edit`, '_blank')
+              window.open(`https://docs.google.com/spreadsheets/d/${import.meta.env.VITE_SPREADSHEET_ID ?? "10zucaKG4Cu7WT-2Dijpn4S9h-6EODzJMmoI9e75LDio"}/edit`, '_blank')
               setMobileMenuOpen(false)
             }}
             block

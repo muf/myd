@@ -1,4 +1,4 @@
-const SPREADSHEET_ID = import.meta.env.VITE_SPREADSHEET_ID
+const SPREADSHEET_ID = import.meta.env.VITE_SPREADSHEET_ID ?? "10zucaKG4Cu7WT-2Dijpn4S9h-6EODzJMmoI9e75LDio"
 const SHEETS_API_BASE = 'https://sheets.googleapis.com/v4/spreadsheets'
 
 export interface SpreadsheetInfo {
@@ -194,9 +194,10 @@ export async function deleteSheetRow(
 ): Promise<boolean> {
   try {
     // rowIndex는 데이터에서의 인덱스 (0부터 시작)
-    // 실제 시트에서는 A28부터 시작하고, 28행이 헤더이므로
-    // 첫 번째 데이터 행은 29행 (인덱스 28)
-    const actualRowIndex = 28 + rowIndex + 1
+    // 실제 시트에서는 A28이 헤더 (인덱스 27)
+    // 첫 번째 데이터 행은 A29 (인덱스 28)
+    // API 인덱스는 0-based이므로: A29 = 28, A30 = 29, ...
+    const actualRowIndex = 28 + rowIndex
     
     const response = await fetch(
       `${SHEETS_API_BASE}/${SPREADSHEET_ID}:batchUpdate`,
