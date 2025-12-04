@@ -478,11 +478,7 @@ export function DataTable({ data, isLoading, hideFilters = false, sheetId, onDat
                       allowClear
                       format="MM/DD"
                       getPopupContainer={() => document.body}
-                      styles={{
-                        popup: {
-                          root: { zIndex: 9999 }
-                        }
-                      }}
+                      popupStyle={{ zIndex: 9999 }}
                       panelRender={(panelNode) => {
                         const isMobile = window.innerWidth < 640
                         // 모달 안에 있는지 확인
@@ -497,9 +493,6 @@ export function DataTable({ data, isLoading, hideFilters = false, sheetId, onDat
                             {panelNode}
                           </div>
                         )
-                      }}
-                      dropdownAlign={{
-                        overflow: { adjustX: true, adjustY: true }
                       }}
                     />
                   </div>
