@@ -17,12 +17,6 @@ interface CategoryTotals {
   actualRemaining: number
 }
 
-interface SheetData {
-  sheetTitle: string
-  headers: string[]
-  rows: string[][]
-}
-
 interface BudgetSummaryProps {
   totalBudget: number
   categoryTotals: CategoryTotals
@@ -32,6 +26,8 @@ interface BudgetSummaryProps {
   currentSheetData: SheetData | null
   allSheetsData: SheetData[]
   monthlyFixedExpense: number
+  sheetId?: number
+  onDataChange?: () => void
 }
 
 // 선택된 월에 따른 예산 기간 계산 (25일 기준)
@@ -82,12 +78,6 @@ function getBudgetPeriodForMonth(selectedMonth: string | null): {
 }
 
 // 금액 파싱 헬퍼
-function parseAmount(value: string): number {
-  if (!value) return 0
-  const num = parseFloat(value.replace(/[^\d.,-]/g, '').replace(/,/g, ''))
-  return isNaN(num) ? 0 : Math.abs(num)
-}
-
 export function BudgetSummary({ 
   totalBudget, 
   categoryTotals, 
@@ -96,7 +86,9 @@ export function BudgetSummary({
   livingExpenseDetails,
   currentSheetData,
   allSheetsData,
-  monthlyFixedExpense
+  monthlyFixedExpense,
+  sheetId,
+  onDataChange
 }: BudgetSummaryProps) {
   const { isDark } = useTheme()
   const [showDetails, setShowDetails] = useState(false)
@@ -326,7 +318,7 @@ export function BudgetSummary({
           <Progress
             percent={Math.min(usagePercent, 100)}
             strokeColor={getStatusColor()}
-            trailColor={isDark ? '#334155' : '#e5e7eb'}
+            railColor={isDark ? '#334155' : '#e5e7eb'}
             showInfo={false}
             size="small"
           />
@@ -475,23 +467,27 @@ export function BudgetSummary({
             }}
           >
             <div className="text-xs text-gray-500 mb-1">💵 남은 돈</div>
-            <div className="text-xs text-gray-400 mb-2">(수입 - 모든지출 - 저축)</div>
-            <div 
-              className="font-mono font-bold text-lg sm:text-xl"
-              style={{ color: actualRemaining >= 0 ? '#22c55e' : '#ef4444' }}
-            >
-              {actualRemaining >= 0 ? '+' : ''}{actualRemaining.toLocaleString('ko-KR')}
-            </div>
+            <div className="text-xs text-gray-400 mb-2">(수입 - 저축 - 👀 모든 예정 지출)</div>
+            <div className="text-xs text-gray-400 mt-2">
+                  (현재){' '}
+                  <span 
+                    className="font-mono"
+                    style={{ color: actualRemaining >= 0 ? '#22c55e' : '#ef4444' }}
+                  >
+                    {actualRemaining >= 0 ? '+' : ''}{actualRemaining.toLocaleString('ko-KR')}
+                  </span>
+                </div>
             {/* 예정 생활비 다 쓰면 + 고정지출 차이 반영 */}
             {(() => {
               // 고정지출 차이: 실제 고정지출 - 예정 고정비용 (양수면 초과, 음수면 절약)
-              const fixedDiff = fixedExpense - monthlyFixedExpense
+              const fixedDiff = -1 * fixedExpense - monthlyFixedExpense
               // 추정 남은 돈: 현재 남은돈 - 남은 생활비 - 고정지출 초과분
               const estimatedRemaining = actualRemaining - remainingBudget - fixedDiff
+              console.log(actualRemaining, remainingBudget, fixedDiff, estimatedRemaining)
               
               return (
                 <div className="text-xs text-gray-400 mt-2">
-                  (추정){' '}
+                  (최종){' '}
                   <span 
                     className="font-mono"
                     style={{ color: estimatedRemaining >= 0 ? '#22c55e' : '#ef4444' }}
@@ -514,12 +510,13 @@ export function BudgetSummary({
         footer={null}
         width={900}
         styles={{
-          content: { background: isDark ? '#1e293b' : '#ffffff' },
-          header: { background: isDark ? '#1e293b' : '#ffffff' },
+          header: { 
+            background: isDark ? '#1e293b' : '#ffffff',
+          },
           body: { 
             maxHeight: 'calc(100vh - 200px)', 
             overflowY: 'auto',
-            paddingBottom: '20px'
+            paddingBottom: '20px',
           },
         }}
         style={{
@@ -530,11 +527,79 @@ export function BudgetSummary({
         {modalType === 'details' ? (
           <ExpenseDetailsTable data={livingExpenseDetails} isDark={isDark} />
         ) : (
-          <DataTable data={getModalSheetData()} isLoading={false} hideFilters={true} />
+          <DataTable 
+            data={getModalSheetData()} 
+            isLoading={false} 
+            hideFilters={true}
+            sheetId={sheetId}
+            onDataChange={onDataChange}
+          />
         )}
       </Modal>
     </div>
   )
+}
+
+// 카테고리별 이모지 매핑
+function getCategoryIcon(category: string) {
+  const lowerCategory = category.toLowerCase()
+  
+  if (lowerCategory.includes('물건')) {
+    return '🧺'
+  }
+  if (lowerCategory.includes('놀이')) {
+    return '🎉'
+  }
+  if (lowerCategory.includes('영양제')) {
+    return '💊'
+  }
+  if (lowerCategory.includes('의료') || lowerCategory.includes('병원') || lowerCategory.includes('약국')) {
+    return '🏥'
+  }
+  if (lowerCategory.includes('식비') || lowerCategory.includes('음식') || lowerCategory.includes('외식')) {
+    return '🍽️'
+  }
+  if (lowerCategory.includes('교통') || lowerCategory.includes('차량')) {
+    return '🚗'
+  }
+  if (lowerCategory.includes('주거') || lowerCategory.includes('집') || lowerCategory.includes('월세') || lowerCategory.includes('관리비')) {
+    return '🏠'
+  }
+  if (lowerCategory.includes('통신') || lowerCategory.includes('전화') || lowerCategory.includes('인터넷')) {
+    return '📱'
+  }
+  if (lowerCategory.includes('쇼핑') || lowerCategory.includes('의류') || lowerCategory.includes('패션') || lowerCategory.includes('옷')) {
+    return '👕'
+  }
+  if (lowerCategory.includes('마트') || lowerCategory.includes('생필품') || lowerCategory.includes('장보기')) {
+    return '🛒'
+  }
+  if (lowerCategory.includes('선물') || lowerCategory.includes('경조사')) {
+    return '🎁'
+  }
+  if (lowerCategory.includes('미용') || lowerCategory.includes('뷰티') || lowerCategory.includes('화장품')) {
+    return '💄'
+  }
+  if (lowerCategory.includes('문화') || lowerCategory.includes('여가') || lowerCategory.includes('취미') || lowerCategory.includes('영화')) {
+    return '🎬'
+  }
+  if (lowerCategory.includes('교육') || lowerCategory.includes('학원') || lowerCategory.includes('책')) {
+    return '📚'
+  }
+  if (lowerCategory.includes('카페') || lowerCategory.includes('커피')) {
+    return '☕'
+  }
+  if (lowerCategory.includes('술') || lowerCategory.includes('주점')) {
+    return '🍺'
+  }
+  if (lowerCategory.includes('반려') || lowerCategory.includes('펫')) {
+    return '🐾'
+  }
+  if (lowerCategory.includes('기타') || lowerCategory.includes('etc')) {
+    return '💰'
+  }
+  
+  return '💰'
 }
 
 // 생활비 상세 테이블 (B10:F20)
@@ -542,6 +607,7 @@ function ExpenseDetailsTable({ data, isDark }: { data: string[][], isDark: boole
   if (!data || data.length === 0) {
     return <div className="text-center text-gray-500 py-8">데이터가 없습니다</div>
   }
+  console.log(data);
 
   // 금액 컬럼 인덱스 찾기 (숫자가 포함된 첫 번째 열)
   const findAmountColIndex = (row: string[]): number => {
@@ -589,7 +655,12 @@ function ExpenseDetailsTable({ data, isDark }: { data: string[][], isDark: boole
                     : (isDark ? 'rgba(51, 65, 85, 0.2)' : 'rgba(243, 244, 246, 0.5)')
                 }}
               >
-                <td className="p-2" style={{ color: isDark ? '#f8fafc' : '#1f2937' }}>{category}</td>
+                <td className="p-2" style={{ color: isDark ? '#f8fafc' : '#1f2937' }}>
+                  <div className="flex items-center gap-2">
+                    <span style={{ fontSize: '18px' }}>{getCategoryIcon(category)}</span>
+                    <span>{category}</span>
+                  </div>
+                </td>
                 <td className="p-2 text-right font-mono text-red-500">
                   {amount > 0 ? `-${amount.toLocaleString('ko-KR')}` : '0'}
                 </td>

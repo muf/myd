@@ -6,6 +6,7 @@ import {
   getBudgetFromSheet,
   getLivingExpenseDetails,
   getMonthlyFixedExpense,
+  getInfoSheetData,
   filterMonthlySheets,
   SpreadsheetInfo,
   SheetData,
@@ -19,6 +20,7 @@ interface UseGoogleSheetsReturn {
   totalBudget: number
   livingExpenseDetails: string[][]
   monthlyFixedExpense: number
+  infoData: string[][]
   selectedMonth: string | null
   hasAccess: boolean | null
   isLoading: boolean
@@ -37,6 +39,7 @@ export function useGoogleSheets(): UseGoogleSheetsReturn {
   const [totalBudget, setTotalBudget] = useState(0)
   const [livingExpenseDetails, setLivingExpenseDetails] = useState<string[][]>([])
   const [monthlyFixedExpense, setMonthlyFixedExpense] = useState(0)
+  const [infoData, setInfoData] = useState<string[][]>([])
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null)
   const [hasAccess, setHasAccess] = useState<boolean | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -82,6 +85,10 @@ export function useGoogleSheets(): UseGoogleSheetsReturn {
         // Load monthly fixed expense from "정보" sheet D23
         const fixedExp = await getMonthlyFixedExpense(accessToken)
         setMonthlyFixedExpense(fixedExp)
+
+        // Load info sheet data
+        const infoSheetData = await getInfoSheetData(accessToken)
+        setInfoData(infoSheetData)
 
         // Note: allSheetsData는 선택된 월의 데이터로만 업데이트됨 (429 에러 방지)
         initialLoadDone.current = true
@@ -149,6 +156,7 @@ export function useGoogleSheets(): UseGoogleSheetsReturn {
     totalBudget,
     livingExpenseDetails,
     monthlyFixedExpense,
+    infoData,
     selectedMonth,
     hasAccess,
     isLoading,

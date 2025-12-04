@@ -126,7 +126,7 @@ export async function getBudgetFromSheet(accessToken: string, sheetTitle: string
 // Get living expense details from B10:F20
 export async function getLivingExpenseDetails(accessToken: string, sheetTitle: string): Promise<string[][]> {
   try {
-    const range = `'${sheetTitle}'!B10:F20`
+    const range = `'${sheetTitle}'!C11:F20`
     const response = await fetch(
       `${SHEETS_API_BASE}/${SPREADSHEET_ID}/values/${encodeURIComponent(range)}`,
       {
@@ -145,10 +145,10 @@ export async function getLivingExpenseDetails(accessToken: string, sheetTitle: s
   }
 }
 
-// Get monthly fixed expense from "정보" sheet D23
+// Get monthly fixed expense from "정보" sheet
 export async function getMonthlyFixedExpense(accessToken: string): Promise<number> {
   try {
-    const range = `'정보'!D23`
+    const range = `'정보'!E26`
     const response = await fetch(
       `${SHEETS_API_BASE}/${SPREADSHEET_ID}/values/${encodeURIComponent(range)}`,
       {
@@ -165,5 +165,71 @@ export async function getMonthlyFixedExpense(accessToken: string): Promise<numbe
     return parseFloat(value.replace(/[^\d.-]/g, '')) || 0
   } catch {
     return 0
+  }
+}
+
+// Get info sheet data (full range)
+export async function getInfoSheetData(accessToken: string): Promise<string[][]> {
+  try {
+    const range = `'정보'!A1:E50`
+    const response = await fetch(
+      `${SHEETS_API_BASE}/${SPREADSHEET_ID}/values/${encodeURIComponent(range)}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    )
+
+    if (!response.ok) return []
+
+    const data = await response.json()
+    return data.values || []
+  } catch {
+    return []
+  }
+}
+
+// Delete a row from a sheet
+export async function deleteSheetRow(
+  accessToken: string,
+  sheetId: number,
+  rowIndex: number // 0-based index in the data (not including header row at A28)
+): Promise<boolean> {
+  try {
+    // rowIndex는 데이터에서의 인덱스 (0부터 시작)
+    // 실제 시트에서는 A28부터 시작하고, 28행이 헤더이므로
+    // 첫 번째 데이터 행은 29행 (인덱스 28)
+    const actualRowIndex = 28 + rowIndex + 1
+    
+    const response = await fetch(
+      `${SHEETS_API_BASE}/${SPREADSHEET_ID}:batchUpdate`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          requests: [
+            {
+              deleteDimension: {
+                range: {
+                  sheetId: sheetId,
+                  dimension: 'ROWS',
+                  startIndex: actualRowIndex,
+                  endIndex: actualRowIndex + 1,
+                },
+              },
+            },
+          ],
+        }),
+      }
+    )
+
+    return response.ok
+  } catch (error) {
+    console.error('Error deleting row:', error)
+    return false
   }
 }

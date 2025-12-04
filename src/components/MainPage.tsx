@@ -10,6 +10,9 @@ import {
   MenuOutlined,
   ArrowUpOutlined,
   CalendarOutlined,
+  InfoCircleOutlined,
+  SearchOutlined,
+  PlusOutlined,
 } from '@ant-design/icons'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
@@ -17,6 +20,9 @@ import { useGoogleSheets } from '../hooks/useGoogleSheets'
 import { DataTable } from './DataTable'
 import { AccessDenied } from './AccessDenied'
 import { BudgetSummary } from './BudgetSummary'
+import { InfoModal } from './InfoModal'
+import { SearchModal } from './SearchModal'
+import { AddDataModal } from './AddDataModal'
 
 const { Header, Content, Footer } = Layout
 const { Title, Text } = Typography
@@ -35,11 +41,14 @@ function extractYear(title: string): number | null {
 }
 
 export function MainPage() {
-  const { user, logout } = useAuth()
+  const { user, logout, accessToken } = useAuth()
   const { toggleTheme, isDark } = useTheme()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [selectedYear, setSelectedYear] = useState<number | null>(null)
+  const [infoModalOpen, setInfoModalOpen] = useState(false)
+  const [searchModalOpen, setSearchModalOpen] = useState(false)
+  const [addDataModalOpen, setAddDataModalOpen] = useState(false)
 
   // Scroll to top 버튼 표시 여부
   useEffect(() => {
@@ -53,6 +62,9 @@ export function MainPage() {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
+  const sheetsData = useGoogleSheets();
+  console.log(sheetsData); // ⚠️ 반드시 유지 (삭제 금지)
+
   const {
     spreadsheetInfo,
     monthlySheets,
@@ -61,13 +73,14 @@ export function MainPage() {
     totalBudget,
     livingExpenseDetails,
     monthlyFixedExpense,
+    infoData,
     selectedMonth,
     hasAccess,
     isLoading,
     error,
     selectMonth,
     refresh,
-  } = useGoogleSheets()
+  } = sheetsData;
 
   // 년도별로 시트 그룹핑
   const yearGroups = useMemo(() => {
@@ -181,7 +194,7 @@ export function MainPage() {
       .filter(([cat]) => cat.includes('대금'))
       .reduce((sum, [, val]) => sum + val, 0)
 
-    // 남은 돈 = 수입 - 모든지출 - 저축
+    // 남은 돈 = 수입 - 저축 - 👀 모든 예정 지출
     const totalExpenseAll = livingExpense + fixedExpense + otherExpense + travelExpense
     const actualRemaining = totalIncome - totalExpenseAll - savings
 
@@ -232,6 +245,7 @@ export function MainPage() {
   ]
 
   return (
+    <>
     <Layout className="min-h-screen">
       {/* Header */}
       <Header
@@ -270,6 +284,33 @@ export function MainPage() {
 
           {/* Desktop Actions */}
           <div className="hidden sm:flex items-center gap-3">
+            {/* 검색 */}
+            <Button
+              type="text"
+              icon={<SearchOutlined style={{ color: '#f59e0b', fontSize: 18 }} />}
+              onClick={() => setSearchModalOpen(true)}
+              size="small"
+              title="전체 검색"
+            />
+            
+            {/* 정보 */}
+            <Button
+              type="text"
+              icon={<InfoCircleOutlined style={{ color: '#60a5fa', fontSize: 18 }} />}
+              onClick={() => setInfoModalOpen(true)}
+              size="small"
+              title="정보"
+            />
+            
+            {/* 구글 시트 열기 */}
+            <Button
+              type="text"
+              icon={<TableOutlined style={{ color: '#0f9d58', fontSize: 18 }} />}
+              onClick={() => window.open(`https://docs.google.com/spreadsheets/d/${import.meta.env.VITE_SPREADSHEET_ID}/edit`, '_blank')}
+              size="small"
+              title="구글 시트 열기"
+            />
+
             {/* 다크모드 토글 */}
             <div className="flex items-center gap-2">
               <SunOutlined style={{ color: isDark ? '#94a3b8' : '#f59e0b', fontSize: 14 }} />
@@ -309,6 +350,32 @@ export function MainPage() {
 
           {/* Mobile Actions */}
           <div className="flex sm:hidden items-center gap-2">
+            {/* 검색 */}
+            <Button
+              type="text"
+              icon={<SearchOutlined style={{ color: '#f59e0b', fontSize: 22 }} />}
+              onClick={() => setSearchModalOpen(true)}
+              style={{ width: 40, height: 40 }}
+              title="전체 검색"
+            />
+            
+            {/* 정보 */}
+            <Button
+              type="text"
+              icon={<InfoCircleOutlined style={{ color: '#60a5fa', fontSize: 22 }} />}
+              onClick={() => setInfoModalOpen(true)}
+              style={{ width: 40, height: 40 }}
+              title="정보"
+            />
+            
+            {/* 구글 시트 열기 */}
+            <Button
+              type="text"
+              icon={<TableOutlined style={{ color: '#0f9d58', fontSize: 22 }} />}
+              onClick={() => window.open(`https://docs.google.com/spreadsheets/d/${import.meta.env.VITE_SPREADSHEET_ID}/edit`, '_blank')}
+              style={{ width: 40, height: 40 }}
+              title="구글 시트 열기"
+            />
             {/* 다크모드 토글 */}
             <Button
               type="text"
@@ -343,9 +410,8 @@ export function MainPage() {
         open={mobileMenuOpen}
         size="default"
         styles={{
-          body: { padding: 0 },
+          body: { padding: 0, background: isDark ? '#0f172a' : '#f9fafb' },
           header: { background: isDark ? '#1e293b' : '#ffffff', borderBottom: `1px solid ${isDark ? '#334155' : '#e5e7eb'}` },
-          content: { background: isDark ? '#0f172a' : '#f9fafb' },
         }}
       >
         <div className="p-4 space-y-4">
@@ -377,6 +443,42 @@ export function MainPage() {
               <MoonOutlined style={{ color: isDark ? '#60a5fa' : '#94a3b8' }} />
             </div>
           </div>
+
+          {/* 검색 */}
+          <Button
+            icon={<SearchOutlined style={{ color: '#f59e0b' }} />}
+            onClick={() => {
+              setSearchModalOpen(true)
+              setMobileMenuOpen(false)
+            }}
+            block
+          >
+            전체 검색
+          </Button>
+
+          {/* 정보 */}
+          <Button
+            icon={<InfoCircleOutlined style={{ color: '#60a5fa' }} />}
+            onClick={() => {
+              setInfoModalOpen(true)
+              setMobileMenuOpen(false)
+            }}
+            block
+          >
+            정보
+          </Button>
+
+          {/* 구글 시트 열기 */}
+          <Button
+            icon={<TableOutlined style={{ color: '#0f9d58' }} />}
+            onClick={() => {
+              window.open(`https://docs.google.com/spreadsheets/d/${import.meta.env.VITE_SPREADSHEET_ID}/edit`, '_blank')
+              setMobileMenuOpen(false)
+            }}
+            block
+          >
+            구글 시트 열기
+          </Button>
 
           {/* 새로고침 */}
           <Button
@@ -499,10 +601,17 @@ export function MainPage() {
             currentSheetData={currentSheetData}
             allSheetsData={allSheetsData}
             monthlyFixedExpense={monthlyFixedExpense}
+            sheetId={monthlySheets.find(s => s.title === selectedMonth)?.sheetId}
+            onDataChange={refresh}
           />
 
           {/* Data table */}
-          <DataTable data={currentSheetData} isLoading={isLoading} />
+          <DataTable 
+            data={currentSheetData} 
+            isLoading={isLoading}
+            sheetId={monthlySheets.find(s => s.title === selectedMonth)?.sheetId}
+            onDataChange={refresh}
+          />
         </div>
       </Content>
 
@@ -512,24 +621,76 @@ export function MainPage() {
         style={{
           background: isDark ? '#0f172a' : '#f9fafb',
           borderTop: `1px solid ${isDark ? '#1e293b' : '#e5e7eb'}`,
+          position: 'relative',
+          zIndex: 1,
         }}
       >
         <Text type="secondary" className="text-xs sm:text-sm">Google Sheets 기반 가계부 서비스</Text>
       </Footer>
-
-      {/* Floating 버튼 - 최상단 이동 */}
-      {showScrollTop && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-6 right-4 w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 z-50"
-          style={{
-            background: 'linear-gradient(135deg, #4ade80 0%, #16a34a 100%)',
-            border: 'none',
-          }}
-        >
-          <ArrowUpOutlined style={{ fontSize: 20, color: '#ffffff' }} />
-        </button>
-      )}
     </Layout>
+
+    {/* 정보 모달 */}
+    <InfoModal
+      open={infoModalOpen}
+      onClose={() => setInfoModalOpen(false)}
+      infoData={infoData}
+    />
+
+    {/* 검색 모달 */}
+    <SearchModal
+      open={searchModalOpen}
+      onClose={() => setSearchModalOpen(false)}
+      monthlySheets={monthlySheets}
+    />
+
+    {/* 데이터 추가 모달 */}
+    <AddDataModal
+      open={addDataModalOpen}
+      onCancel={() => setAddDataModalOpen(false)}
+      onSuccess={() => {
+        refresh()
+      }}
+      accessToken={accessToken || ''}
+      availableSheets={monthlySheets}
+      defaultSheet={selectedMonth || undefined}
+      allSheetsData={allSheetsData}
+    />
+
+    {/* Floating 버튼 - 데이터 추가 */}
+    <button
+      onClick={() => setAddDataModalOpen(true)}
+      className="fixed w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110"
+      style={{
+        background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
+        border: 'none',
+        bottom: '24px',
+        right: '16px',
+        zIndex: 9999,
+        cursor: 'pointer',
+        position: 'fixed',
+      }}
+    >
+      <PlusOutlined style={{ fontSize: 24, color: '#ffffff' }} />
+    </button>
+
+    {/* Floating 버튼 - 최상단 이동 */}
+    {showScrollTop && (
+      <button
+        onClick={scrollToTop}
+        className="fixed w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110"
+        style={{
+          background: 'linear-gradient(135deg, #4ade80 0%, #16a34a 100%)',
+          border: 'none',
+          bottom: '24px',
+          right: '80px',
+          zIndex: 9999,
+          cursor: 'pointer',
+          position: 'fixed',
+        }}
+      >
+        <ArrowUpOutlined style={{ fontSize: 20, color: '#ffffff' }} />
+      </button>
+    )}
+    </>
   )
 }
