@@ -45,7 +45,7 @@ export function LoginPage() {
           backdropFilter: 'blur(12px)',
           border: `1px solid ${isDark ? '#334155' : '#e5e7eb'}`,
         }}
-        bordered={false}
+        variant="borderless"
       >
         {/* Logo */}
         <div className="mb-6">

@@ -202,7 +202,7 @@ export function AddDataModal({
         onOk={handleSubmit}
         confirmLoading={loading}
         width={600}
-        destroyOnClose
+        destroyOnHidden
         styles={{
           header: {
             background: isDark ? '#1f2937' : '#fff',
