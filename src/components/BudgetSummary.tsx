@@ -4,7 +4,6 @@ import { CalendarOutlined, DownOutlined, UpOutlined } from '@ant-design/icons'
 import { useTheme } from '../contexts/ThemeContext'
 import { DataTable } from './DataTable'
 import { SheetData } from '../services/sheetsApi'
-import { formatAmount } from '../utils/common'
 import { getBudgetPeriodForMonth } from '../utils/budgetUtils'
 import type { CategoryTotals } from '../types'
 

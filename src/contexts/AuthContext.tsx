@@ -1,5 +1,37 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 
+// Google Identity Services 타입 정의
+interface TokenClient {
+  requestAccessToken: (options?: { prompt?: string }) => void
+}
+
+interface TokenResponse {
+  access_token?: string
+  error?: string
+}
+
+interface UserInfoResponse {
+  name?: string
+  email?: string
+  picture?: string
+}
+
+declare global {
+  const google: {
+    accounts: {
+      oauth2: {
+        initTokenClient: (config: {
+          client_id: string
+          scope: string
+          callback: (response: TokenResponse) => void
+          error_callback?: (error: { type: string; message: string }) => void
+        }) => TokenClient
+        revoke: (token: string, callback: () => void) => void
+      }
+    }
+  }
+}
+
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
 const SCOPES = [
@@ -37,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [tokenClient, setTokenClient] = useState<google.accounts.oauth2.TokenClient | null>(null)
+  const [tokenClient, setTokenClient] = useState<TokenClient | null>(null)
 
   // Initialize Google Identity Services
   useEffect(() => {
@@ -60,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 headers: { Authorization: `Bearer ${response.access_token}` }
               })
               if (userInfoRes.ok) {
-                const userInfo = await userInfoRes.json()
+                const userInfo = await userInfoRes.json() as UserInfoResponse
                 const userData = {
                   name: userInfo.name || 'User',
                   email: userInfo.email || '',

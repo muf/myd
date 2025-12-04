@@ -16,7 +16,6 @@ interface SearchModalProps {
 
 export function SearchModal({ open, onClose, monthlySheets }: SearchModalProps) {
   const { accessToken } = useAuth()
-  const { isDark } = useTheme()
   const [allSheetsData, setAllSheetsData] = useState<SheetData[]>([])
   const [isLoadingData, setIsLoadingData] = useState(false)
 
