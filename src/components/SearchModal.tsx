@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { Modal, Typography, Spin } from 'antd'
 import { SearchOutlined } from '@ant-design/icons'
-import { useTheme } from '../contexts/ThemeContext'
 import { useAuth } from '../contexts/AuthContext'
 import { DataTable } from './DataTable'
 import { SheetData, getSheetData } from '../services/sheetsApi'

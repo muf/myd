@@ -415,7 +415,7 @@ export function AddDataModal({
               style={{ width: '100%' }}
               placeholder="금액을 입력하세요"
               formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-              parser={(value) => (value || '').replace(/\$\s?|(,*)/g, '')}
+              parser={(value) => parseFloat((value || '').replace(/\$\s?|(,*)/g, '') || '0') as any}
               min={0}
             />
           </Form.Item>
