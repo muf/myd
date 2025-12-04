@@ -5,7 +5,9 @@ https://console.cloud.google.com/auth/branding?project=potato-454402
 
 ## v0.0.1
 
-- [ ] github page 배포
+- [x] github page 배포
+  - URL: https://muf.github.io/myd/
+  - Google OAuth 설정 완료
 
 
 
