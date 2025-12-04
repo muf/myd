@@ -53,6 +53,8 @@ export function useGoogleSheets(): UseGoogleSheetsReturn {
     if (!accessToken || initialLoadDone.current) return
 
     async function loadInitialData() {
+      if (!accessToken) return
+      
       setIsLoading(true)
       setError(null)
 
@@ -107,11 +109,11 @@ export function useGoogleSheets(): UseGoogleSheetsReturn {
   useEffect(() => {
     if (!accessToken || !selectedMonth) return
 
-    async function loadSheetData() {
+    async function loadSheetData(token: string, month: string) {
       setIsLoading(true)
       setError(null)
       try {
-        const data = await getSheetData(accessToken, selectedMonth!)
+        const data = await getSheetData(token, month)
         setCurrentSheetData(data)
         
         // allSheetsData에 현재 시트 데이터 추가/업데이트
@@ -123,11 +125,11 @@ export function useGoogleSheets(): UseGoogleSheetsReturn {
         }
 
         // Load budget from C2
-        const budget = await getBudgetFromSheet(accessToken, selectedMonth!)
+        const budget = await getBudgetFromSheet(token, month)
         setTotalBudget(budget)
 
         // Load living expense details from B10:F20
-        const details = await getLivingExpenseDetails(accessToken, selectedMonth!)
+        const details = await getLivingExpenseDetails(token, month)
         setLivingExpenseDetails(details)
       } catch (err) {
         setError(err instanceof Error ? err.message : '시트 데이터를 불러오는데 실패했습니다')
@@ -136,7 +138,7 @@ export function useGoogleSheets(): UseGoogleSheetsReturn {
       }
     }
 
-    loadSheetData()
+    loadSheetData(accessToken, selectedMonth)
   }, [accessToken, selectedMonth, refreshTrigger])
 
   const selectMonth = useCallback((month: string) => {

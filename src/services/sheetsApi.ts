@@ -30,7 +30,6 @@ export function filterMonthlySheets(sheets: { sheetId: number; title: string }[]
 // Get spreadsheet info
 export async function getSpreadsheetInfo(accessToken: string): Promise<SpreadsheetInfo | null> {
   try {
-    console.log('Fetching spreadsheet info...')
     const response = await fetch(
       `${SHEETS_API_BASE}/${SPREADSHEET_ID}?fields=properties.title,sheets.properties`,
       {
@@ -40,8 +39,6 @@ export async function getSpreadsheetInfo(accessToken: string): Promise<Spreadshe
       }
     )
 
-    console.log('Response status:', response.status)
-
     if (!response.ok) {
       const errorText = await response.text()
       console.error('API Error:', response.status, errorText)
@@ -49,7 +46,6 @@ export async function getSpreadsheetInfo(accessToken: string): Promise<Spreadshe
     }
 
     const data = await response.json()
-    console.log('Spreadsheet loaded:', data.properties?.title)
     
     return {
       title: data.properties.title,

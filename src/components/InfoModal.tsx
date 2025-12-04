@@ -1,6 +1,7 @@
 import { Modal, Typography, Table, Tooltip } from 'antd'
 import { InfoCircleOutlined } from '@ant-design/icons'
 import { useTheme } from '../contexts/ThemeContext'
+import { parseAmount, formatAmount } from '../utils/common'
 
 const { Text } = Typography
 
@@ -110,19 +111,6 @@ export function InfoModal({ open, onClose, infoData }: InfoModalProps) {
     return sections
   }
 
-  // 금액 파싱 헬퍼
-  const parseAmount = (value: string): number => {
-    if (!value) return 0
-    const cleaned = value.replace(/[^\d.-]/g, '').replace(/,/g, '')
-    const num = parseFloat(cleaned)
-    return isNaN(num) ? 0 : Math.abs(num)
-  }
-
-  // 금액 포맷 헬퍼
-  const formatAmount = (amount: number): string => {
-    return `₩${amount.toLocaleString()}`
-  }
-
   // 빈 열 제거 및 테이블 렌더링
   const renderSection = (section: Section, index: number) => {
     if (section.data.length === 0) return null
@@ -188,7 +176,10 @@ export function InfoModal({ open, onClose, infoData }: InfoModalProps) {
       const colIdx = amountColIndex // TypeScript를 위한 로컬 변수
       validDataRows.forEach(row => {
         const amountValue = row[colIdx] || ''
-        totalAmount += parseAmount(amountValue)
+        const amount = parseAmount(amountValue)
+        if (amount !== null) {
+          totalAmount += amount
+        }
       })
     }
 
@@ -264,7 +255,7 @@ export function InfoModal({ open, onClose, infoData }: InfoModalProps) {
                 color: section.color,
               }}
             >
-              {formatAmount(totalAmount)}
+              ₩{formatAmount(totalAmount)}
             </Text>
           )}
         </div>

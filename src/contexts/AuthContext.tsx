@@ -46,12 +46,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     script.async = true
     script.defer = true
     script.onload = () => {
-      console.log('GIS loaded')
       const client = google.accounts.oauth2.initTokenClient({
         client_id: CLIENT_ID,
         scope: SCOPES,
         callback: async (response) => {
-          console.log('Token response:', response)
           if (response.access_token) {
             setAccessToken(response.access_token)
             localStorage.setItem('access_token', response.access_token)
@@ -63,7 +61,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               })
               if (userInfoRes.ok) {
                 const userInfo = await userInfoRes.json()
-                console.log('User info:', userInfo)
                 const userData = {
                   name: userInfo.name || 'User',
                   email: userInfo.email || '',
@@ -122,16 +119,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(() => {
     if (tokenClient) {
-      console.log('Requesting token...')
       tokenClient.requestAccessToken({ prompt: 'consent' })
     }
   }, [tokenClient])
 
   const logout = useCallback(() => {
     if (accessToken) {
-      google.accounts.oauth2.revoke(accessToken, () => {
-        console.log('Token revoked')
-      })
+      google.accounts.oauth2.revoke(accessToken, () => {})
     }
     setUser(null)
     setAccessToken(null)

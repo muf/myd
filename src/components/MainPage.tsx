@@ -23,16 +23,10 @@ import { BudgetSummary } from './BudgetSummary'
 import { InfoModal } from './InfoModal'
 import { SearchModal } from './SearchModal'
 import { AddDataModal } from './AddDataModal'
+import { parseAmount } from '../utils/common'
 
 const { Header, Content, Footer } = Layout
 const { Title, Text } = Typography
-
-// 숫자 파싱 헬퍼
-function parseAmount(value: string): number {
-  if (!value) return 0
-  const num = parseFloat(value.replace(/[^\d.,-]/g, '').replace(/,/g, ''))
-  return isNaN(num) ? 0 : Math.abs(num)
-}
 
 // 시트 제목에서 년도 추출
 function extractYear(title: string): number | null {
@@ -62,9 +56,8 @@ export function MainPage() {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
-  const sheetsData = useGoogleSheets();
-  console.log(sheetsData); // ⚠️ 반드시 유지 (삭제 금지)
-
+  
+  const sheetsData = useGoogleSheets()
   const {
     spreadsheetInfo,
     monthlySheets,
@@ -154,7 +147,7 @@ export function MainPage() {
         const category = row[categoryColIndex] || ''
         const amount = parseAmount(row[amountColIndex] || '')
 
-        if (!category) return
+        if (!category || amount === null) return
 
         // 카테고리별 합산
         if (!totals[category]) {

@@ -4,18 +4,9 @@ import { CalendarOutlined, DownOutlined, UpOutlined } from '@ant-design/icons'
 import { useTheme } from '../contexts/ThemeContext'
 import { DataTable } from './DataTable'
 import { SheetData } from '../services/sheetsApi'
-
-interface CategoryTotals {
-  all: Record<string, number>
-  livingExpense: number
-  fixedExpense: number
-  otherExpense: number
-  travelExpense: number
-  savings: number
-  payments: number
-  totalIncome: number
-  actualRemaining: number
-}
+import { formatAmount } from '../utils/common'
+import { getBudgetPeriodForMonth } from '../utils/budgetUtils'
+import type { CategoryTotals } from '../types'
 
 interface BudgetSummaryProps {
   totalBudget: number
@@ -30,54 +21,6 @@ interface BudgetSummaryProps {
   onDataChange?: () => void
 }
 
-// 선택된 월에 따른 예산 기간 계산 (25일 기준)
-function getBudgetPeriodForMonth(selectedMonth: string | null): { 
-  start: Date
-  end: Date
-  totalDays: number
-  elapsedDays: number
-  remainingDays: number
-  idealPercent: number
-} {
-  const now = new Date()
-  
-  let targetYear = now.getFullYear()
-  let targetMonth = now.getMonth() + 1
-  
-  if (selectedMonth) {
-    const match = selectedMonth.match(/(\d{4})년 (\d{1,2})월/)
-    if (match) {
-      targetYear = parseInt(match[1], 10)
-      targetMonth = parseInt(match[2], 10)
-    }
-  }
-
-  let startYear = targetYear
-  let endYear = targetYear
-  
-  if (targetMonth === 1) {
-    startYear = targetYear - 1
-  }
-  
-  const startMonth = targetMonth === 1 ? 11 : targetMonth - 2
-  const endMonth = targetMonth - 1
-
-  const start = new Date(startYear, startMonth, 25)
-  const end = new Date(endYear, endMonth, 24)
-
-  const totalDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
-
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  let elapsedDays = Math.ceil((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
-  
-  elapsedDays = Math.max(0, Math.min(elapsedDays, totalDays))
-  const remainingDays = Math.max(1, totalDays - elapsedDays + 1)
-  const idealPercent = totalDays > 0 ? Math.round((elapsedDays / totalDays) * 100) : 0
-
-  return { start, end, totalDays, elapsedDays, remainingDays, idealPercent }
-}
-
-// 금액 파싱 헬퍼
 export function BudgetSummary({ 
   totalBudget, 
   categoryTotals, 
@@ -483,7 +426,6 @@ export function BudgetSummary({
               const fixedDiff = -1 * fixedExpense - monthlyFixedExpense
               // 추정 남은 돈: 현재 남은돈 - 남은 생활비 - 고정지출 초과분
               const estimatedRemaining = actualRemaining - remainingBudget - fixedDiff
-              console.log(actualRemaining, remainingBudget, fixedDiff, estimatedRemaining)
               
               return (
                 <div className="text-xs text-gray-400 mt-2">
@@ -607,7 +549,6 @@ function ExpenseDetailsTable({ data, isDark }: { data: string[][], isDark: boole
   if (!data || data.length === 0) {
     return <div className="text-center text-gray-500 py-8">데이터가 없습니다</div>
   }
-  console.log(data);
 
   // 금액 컬럼 인덱스 찾기 (숫자가 포함된 첫 번째 열)
   const findAmountColIndex = (row: string[]): number => {

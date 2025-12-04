@@ -9,6 +9,9 @@ import type { Dayjs } from 'dayjs'
 import dayjs from 'dayjs'
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
+import { parseAmount, parseDate, getCategoryColor } from '../utils/common'
+import { getColumnName, COLUMN_CONFIG } from '../utils/columnUtils'
+import type { DataRow, ColumnName } from '../types'
 
 dayjs.extend(isSameOrAfter)
 dayjs.extend(isSameOrBefore)
@@ -23,89 +26,7 @@ interface DataTableProps {
   onDataChange?: () => void
 }
 
-interface DataRow {
-  key: string
-  [key: string]: string
-}
-
-// 컬럼 이름 매핑 (헤더 텍스트 기준)
-type ColumnName = '날짜' | '요소' | '지출분류' | '요약' | '금액' | '메모'
-
-// 컬럼별 기능 정의
-const COLUMN_CONFIG: Record<ColumnName, { sort: boolean; filter: boolean }> = {
-  '날짜': { sort: true, filter: true },
-  '요소': { sort: false, filter: true },
-  '지출분류': { sort: false, filter: true },
-  '요약': { sort: false, filter: false },
-  '금액': { sort: true, filter: false },
-  '메모': { sort: false, filter: true },
-}
-
-// 날짜 파싱 함수
-function parseDate(dateStr: string): Date | null {
-  if (!dateStr) return null
-  
-  const slashMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})$/)
-  if (slashMatch) {
-    const month = parseInt(slashMatch[1], 10)
-    const day = parseInt(slashMatch[2], 10)
-    const year = new Date().getFullYear()
-    return new Date(year, month - 1, day)
-  }
-  
-  const dashMatch = dateStr.match(/^(\d{1,2})-(\d{1,2})$/)
-  if (dashMatch) {
-    const month = parseInt(dashMatch[1], 10)
-    const day = parseInt(dashMatch[2], 10)
-    const year = new Date().getFullYear()
-    return new Date(year, month - 1, day)
-  }
-  
-  const parsed = new Date(dateStr)
-  return isNaN(parsed.getTime()) ? null : parsed
-}
-
-// 숫자 파싱 함수
-function parseNumber(value: string): number | null {
-  if (!value || value.trim() === '' || value === '-') return null
-  // 숫자, 콤마, 마이너스, 소수점만 남기고 제거
-  const cleaned = value.replace(/[^\d.,-]/g, '').replace(/,/g, '')
-  const num = parseFloat(cleaned)
-  return isNaN(num) ? null : num
-}
-
-// 컬럼 타입 확인
-function getColumnName(header: string): ColumnName | null {
-  const lower = header.toLowerCase().trim()
-  if (lower.includes('날짜') || lower.includes('일자') || lower.includes('date')) return '날짜'
-  if (lower.includes('요소')) return '요소'
-  if (lower.includes('지출분류') || lower.includes('분류')) return '지출분류'
-  if (lower.includes('메모')) return '메모'
-  if (lower.includes('요약') || lower.includes('내용')) return '요약'
-  // 금액 관련 다양한 패턴 매칭
-  if (lower.includes('금액') || lower.includes('가격') || lower === '수입' || lower === '지출' || lower.includes('원') || lower.includes('money') || lower.includes('amount')) return '금액'
-  return null
-}
-
-// 카테고리에 따른 행 색상 결정
-function getRowColorByCategory(category: string): { text: string; bg: string } | null {
-  if (!category) return null
-  const lower = category.toLowerCase()
-  
-  // 수입 카테고리: 파스텔 파란색
-  if (lower.includes('수입')) {
-    return { text: '#60a5fa', bg: 'rgba(96, 165, 250, 0.1)' }
-  }
-  
-  // 지출, 여행 카테고리: 파스텔 붉은색
-  if (lower.includes('지출') || lower.includes('여행')) {
-    return { text: '#f87171', bg: 'rgba(248, 113, 113, 0.1)' }
-  }
-  
-  return null
-}
-
-const ITEMS_PER_PAGE = 20
+const ITEMS_PER_PAGE = 30
 
 export function DataTable({ data, isLoading, hideFilters = false, sheetId, onDataChange }: DataTableProps) {
   const { isDark } = useTheme()
@@ -219,8 +140,8 @@ export function DataTable({ data, isLoading, hideFilters = false, sheetId, onDat
 
         let comparison = 0
         if (isAmount) {
-          const numA = parseNumber(valA) ?? 0
-          const numB = parseNumber(valB) ?? 0
+          const numA = parseAmount(valA) ?? 0
+          const numB = parseAmount(valB) ?? 0
           comparison = numA - numB
         } else if (isDate) {
           const dateA = parseDate(valA)
@@ -314,7 +235,7 @@ export function DataTable({ data, isLoading, hideFilters = false, sheetId, onDat
       const dateStr = row[dateCol.dataIndex]
       const category = row[categoryCol.dataIndex] || ''
       const amountStr = row[amountCol.dataIndex] || '0'
-      const amount = parseNumber(amountStr)
+      const amount = parseAmount(amountStr)
 
       if (!dateStr || amount === null) return
 
@@ -380,7 +301,7 @@ export function DataTable({ data, isLoading, hideFilters = false, sheetId, onDat
     filteredData.forEach((row) => {
       const value = row[`col_${amountColIndex}`]
       const category = categoryColIndex >= 0 ? row[`col_${categoryColIndex}`] : ''
-      const num = parseNumber(value)
+      const num = parseAmount(value)
       
       if (num !== null && category) {
         const categoryLower = category.toLowerCase()
@@ -837,7 +758,7 @@ export function DataTable({ data, isLoading, hideFilters = false, sheetId, onDat
               // 지출분류 컬럼에서 카테고리 값 가져오기
               const categoryCol = columnSettings.find((c) => c.columnName === '지출분류')
               const category = categoryCol ? row[categoryCol.dataIndex] : ''
-              const rowColor = getRowColorByCategory(category)
+              const rowColor = getCategoryColor(category)
               
               // 카테고리에 따라 지출/수입 판단
               const isExpenseCategory = category && (category.includes('지출') || category.includes('여행'))
@@ -853,7 +774,7 @@ export function DataTable({ data, isLoading, hideFilters = false, sheetId, onDat
                 >
                   {columnSettings.map((col) => {
                     const value = row[col.dataIndex]
-                    const num = col.isAmount ? parseNumber(value) : null
+                    const num = col.isAmount ? parseAmount(value) : null
                     
                     // 금액 컬럼: 카테고리에 따라 색상 결정
                     let textColor = rowColor?.text || (isDark ? '#f8fafc' : '#1f2937')
@@ -932,8 +853,8 @@ export function DataTable({ data, isLoading, hideFilters = false, sheetId, onDat
           const memo = memoCol ? row[memoCol.dataIndex] : ''
           
           
-          const num = parseNumber(amount)
-          const rowColor = getRowColorByCategory(category)
+          const num = parseAmount(amount)
+          const rowColor = getCategoryColor(category)
           
           // 카테고리에 따라 지출/수입 판단
           const isExpenseCategory = category && (category.includes('지출') || category.includes('여행'))
