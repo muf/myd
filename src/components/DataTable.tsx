@@ -41,6 +41,7 @@ export function DataTable({ data, isLoading, hideFilters = false, sheetId, onDat
   const loaderRef = useRef<HTMLDivElement>(null)
   const [deletingRowIndex, setDeletingRowIndex] = useState<number | null>(null)
   const [showChart, setShowChart] = useState(false)
+  const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>({})
 
   // 삭제 핸들러
   const handleDelete = useCallback(async (rowIndex: number, rowData: DataRow) => {
@@ -465,18 +466,41 @@ export function DataTable({ data, isLoading, hideFilters = false, sheetId, onDat
                 return (
                   <div key={col.dataIndex} className="w-full sm:w-auto">
                     <RangePicker
-                      placeholder={['시작일', '종료일']}
+                      placeholder={['시작', '종료']}
                       value={dateRange}
                       onChange={(dates) => {
                         setDateRange(dates as [Dayjs | null, Dayjs | null] | null)
                         setVisibleCount(ITEMS_PER_PAGE)
                       }}
                       className="w-full"
+                      size="large"
                       style={{ maxWidth: '100%' }}
                       allowClear
-                      format="YYYY-MM-DD"
-                      placement="bottomLeft"
-                      getPopupContainer={(trigger) => trigger.parentElement?.parentElement || document.body}
+                      format="MM/DD"
+                      getPopupContainer={() => document.body}
+                      styles={{
+                        popup: {
+                          root: { zIndex: 9999 }
+                        }
+                      }}
+                      panelRender={(panelNode) => {
+                        const isMobile = window.innerWidth < 640
+                        // 모달 안에 있는지 확인
+                        const isInModal = document.querySelector('.ant-modal') !== null
+                        const scale = isMobile ? (isInModal ? 0.65 : 0.7) : 0.9
+                        return (
+                          <div style={{ 
+                            maxWidth: 'min(100vw - 32px, 640px)',
+                            transform: `scale(${scale})`,
+                            transformOrigin: 'top left'
+                          }}>
+                            {panelNode}
+                          </div>
+                        )
+                      }}
+                      dropdownAlign={{
+                        overflow: { adjustX: true, adjustY: true }
+                      }}
                     />
                   </div>
                 )
@@ -490,10 +514,19 @@ export function DataTable({ data, isLoading, hideFilters = false, sheetId, onDat
                   placeholder={`${col.header}`}
                   value={columnFilters[col.dataIndex] || []}
                   onChange={(values) => handleFilterChange(col.dataIndex, values)}
+                  open={openDropdowns[col.dataIndex]}
+                  onOpenChange={(open) => {
+                    setOpenDropdowns(prev => ({ ...prev, [col.dataIndex]: open }))
+                  }}
+                  onSelect={() => {
+                    // 선택 시 드롭다운 닫기
+                    setOpenDropdowns(prev => ({ ...prev, [col.dataIndex]: false }))
+                  }}
                   className="w-full sm:w-auto"
                   style={{ minWidth: 120 }}
                   maxTagCount={1}
                   allowClear
+                  showSearch={false}
                   options={col.options.map((opt) => ({ label: opt, value: opt }))}
                 />
               )
@@ -725,11 +758,20 @@ export function DataTable({ data, isLoading, hideFilters = false, sheetId, onDat
                           placeholder={`필터`}
                           value={columnFilters[col.dataIndex] || []}
                           onChange={(values) => handleFilterChange(col.dataIndex, values)}
+                          open={openDropdowns[col.dataIndex]}
+                          onOpenChange={(open) => {
+                            setOpenDropdowns(prev => ({ ...prev, [col.dataIndex]: open }))
+                          }}
+                          onSelect={() => {
+                            // 선택 시 드롭다운 닫기
+                            setOpenDropdowns(prev => ({ ...prev, [col.dataIndex]: false }))
+                          }}
                           className="w-full"
                           size="small"
                           maxTagCount={0}
                           maxTagPlaceholder={(omittedValues) => `${omittedValues.length}개 선택`}
                           allowClear
+                          showSearch={false}
                           options={filterCol.options.map((opt) => ({ label: opt, value: opt }))}
                           style={{ minWidth: 100 }}
                           onClick={(e) => e.stopPropagation()}
